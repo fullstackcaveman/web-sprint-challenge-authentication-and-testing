@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const request = require('supertest');
 const db = require('../data/dbConfig');
 const server = require('./server');
@@ -69,6 +68,25 @@ describe('server', () => {
 		test('value of password has changed', async () => {
 			const res = await request(server).post('/api/auth/register').send(rey);
 			expect(res.body.password).not.toBe(rey.password);
+		});
+	});
+
+	describe('GET/api/jokes', () => {
+		test('able to access jokes endpoint', async () => {
+			const res = await request(server)
+				.get('/api/jokes')
+				// Pass token into request to access protected route
+				.set(
+					'Authorization',
+					'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0Ijo0LCJ1c2VybmFtZSI6IkNocmlzIDEiLCJpYXQiOjE2MTkxOTQ2MDYsImV4cCI6MTYxOTI4MTAwNn0.rB6U1fbtBLPOmcJ_j4y2qkF3ix-SZ33hu-VTiI92pMo'
+				);
+			expect(res.status).toBe(200);
+		});
+
+		test('verify that access token is needed', async () => {
+			const res = await request(server).get('/api/jokes');
+
+			expect(res.status).not.toBe(200);
 		});
 	});
 });
