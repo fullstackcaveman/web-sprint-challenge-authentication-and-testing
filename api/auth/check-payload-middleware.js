@@ -19,7 +19,7 @@ const checkUsernameExists = async (req, res, next) => {
 	try {
 		const [user] = await Users.findBy({ username: req.body.username });
 		if (user) {
-			res.json({ status: 422, message: 'username taken' });
+			res.status(403).json({ message: 'username taken' });
 		} else {
 			req.user = user;
 			next();
