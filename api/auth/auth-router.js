@@ -1,8 +1,28 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { jwtSecret } = require('../../config/secrets.js');
+
 const router = require('express').Router();
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
-  /*
+const Users = require('../users/users-model.js');
+// const checkCredentials = require('./check-payload-middleware');
+
+router.post('/register', (req, res, next) => {
+	let user = req.body;
+
+	// bcrypting the password before saving
+	const rounds = process.env.BCRYPT_ROUNDS || 8; // 2 ^ 8
+	const hash = bcrypt.hashSync(user.password, rounds);
+
+	user.password = hash;
+
+	Users.addUser(user)
+		.then((saved) => {
+			res.status(201).json(saved);
+		})
+		.catch(next);
+
+	/*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
     DO NOT EXCEED 2^8 ROUNDS OF HASHING!
@@ -29,9 +49,21 @@ router.post('/register', (req, res) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
-  /*
+router.post('/login', (req, res, next) => {
+	let { username, password } = req.body;
+
+	Users.findBy({ username }) // it would be nice to have middleware do this
+		.then(([user]) => {
+			if (user && bcrypt.compareSync(password, user.password)) {
+				const token = createToken(user);
+
+				res.json({ message: `welcome, ${user.username}`, token });
+			} else {
+				res.status(401).json({ message: 'Invalid Credentials' });
+			}
+		})
+		.catch(next);
+	/*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
 
@@ -55,5 +87,18 @@ router.post('/login', (req, res) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
 });
+
+const createToken = (user) => {
+	const payload = {
+		subject: user.id,
+		username: user.username,
+	};
+
+	const options = {
+		expiresIn: '24h',
+	};
+
+	return jwt.sign(payload, jwtSecret, options);
+};
 
 module.exports = router;

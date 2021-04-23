@@ -123,3 +123,4 @@ dist
 
 # Test db
 test.db3
+*.db3
