@@ -1,4 +1,8 @@
-module.exports = (req, res, next) => {
+// const jwt = require('jsonwebtoken');
+// const { JWT_SECRET } = require('../secrets'); // use this secret!
+const Users = require('../users/users-model');
+
+const checkCredentials = (req, res, next) => {
 	const { username, password } = req.body;
 	const valid = Boolean(username && password && typeof password === 'string');
 
@@ -10,3 +14,19 @@ module.exports = (req, res, next) => {
 		});
 	}
 };
+
+const checkUsernameExists = async (req, res, next) => {
+	try {
+		const [user] = await Users.findBy({ username: req.body.username });
+		if (user) {
+			res.json({ status: 422, message: 'username taken' });
+		} else {
+			req.user = user;
+			next();
+		}
+	} catch (err) {
+		next(err);
+	}
+};
+
+module.exports = { checkCredentials, checkUsernameExists };
