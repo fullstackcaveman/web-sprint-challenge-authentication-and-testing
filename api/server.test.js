@@ -18,7 +18,7 @@ beforeEach(async () => {
 
 // Runs after all tests are done
 afterAll(async () => {
-	// Cuts off db connection
+	// Cuts off db connection for security
 	await db.destroy();
 });
 
@@ -65,7 +65,7 @@ describe('server', () => {
 			});
 		});
 
-		test('value of password has changed', async () => {
+		test('value of password has hashed', async () => {
 			const res = await request(server).post('/api/auth/register').send(rey);
 			expect(res.body.password).not.toBe(rey.password);
 		});
